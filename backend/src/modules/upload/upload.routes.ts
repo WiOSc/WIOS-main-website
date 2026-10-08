@@ -1,0 +1,1 @@
+// Mounts UploadThing's createRouteHandler
