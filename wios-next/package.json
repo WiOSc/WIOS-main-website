@@ -1,0 +1,28 @@
+{
+  "name": "wios-next",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "dev": "next dev -p 4000",
+    "build": "next build",
+    "start": "next start -p 4000",
+    "seed:admin": "node scripts/seed-admin.js",
+    "sync-users": "node scripts/sync-users.js",
+    "set-role": "node scripts/set-role.js",
+    "list-auth-users": "node scripts/list-auth-users.js",
+    "test:upload": "node scripts/test-upload.js",
+    "test:all": "node scripts/test-all.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "uploadthing": "^7.0.0"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.5"
+  }
+}
