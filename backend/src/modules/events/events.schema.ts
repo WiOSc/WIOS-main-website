@@ -14,6 +14,10 @@ export const createEventSchema = z.object({
   slug: z.string().optional(),
   title: z.string().min(1, "Title is required"),
   description: z.string().default(""),
+  // Short blurb shown on the /events timeline (the main description is too long for it).
+  shortDescription: z.string().optional().default(""),
+  // Whether this event appears on the public /events timeline.
+  showOnEvents: z.boolean().default(true),
   date: z.string().min(1, "Date is required"),
   venue: z.string().min(1, "Venue is required"),
   category: z.string().min(1).default("General"),
@@ -47,6 +51,8 @@ export interface EventDoc {
   slug: string;
   title: string;
   description: string;
+  shortDescription?: string;
+  showOnEvents?: boolean;
   date: string;
   venue: string;
   category: string;

@@ -54,6 +54,8 @@ export function serializeEventDoc(
     slug,
     title: data.title ?? "",
     description: data.description ?? "",
+    shortDescription: data.shortDescription ?? "",
+    showOnEvents: data.showOnEvents ?? true,
     date,
     venue,
     category,

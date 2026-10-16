@@ -163,15 +163,33 @@ export default function EventTimeline({
 }: {
   events?: EventItem[];
 }) {
-  const [currentIndex, setCurrentIndex] = useState(0); 
+  const [currentIndex, setCurrentIndex] = useState(0);
   const currentIndexRef = useRef(currentIndex);
   currentIndexRef.current = currentIndex;
+
+  // Track poster orientation so vertical posters are shown in full (not cropped).
+  const [portrait, setPortrait] = useState(false);
+
+  // Scroll direction drives the enter/exit slide (1 = down, -1 = up).
+  const [direction, setDirection] = useState(1);
 
   const touchStartY = useRef<number | null>(null);
   const cooldownRef = useRef(false);
 
   const allYears = useMemo(
     () => Array.from(new Set(events.map((e) => e.year))),
+    [events]
+  );
+
+  // Jump straight to the first event of a given year (clicking a year on the dial).
+  const goToYear = useCallback(
+    (year: string) => {
+      const idx = events.findIndex((e) => e.year === year);
+      if (idx >= 0) {
+        setDirection(idx >= currentIndexRef.current ? 1 : -1);
+        setCurrentIndex(idx);
+      }
+    },
     [events]
   );
 
@@ -185,6 +203,7 @@ export default function EventTimeline({
         setTimeout(() => {
           cooldownRef.current = false;
         }, 260);
+        setDirection(delta > 0 ? 1 : -1);
         return next;
       });
     },
@@ -238,13 +257,21 @@ export default function EventTimeline({
   }, [step]);
 
   useEffect(() => {
-    const onReset = () => setCurrentIndex(0);
+    const onReset = () => {
+      setDirection(-1);
+      setCurrentIndex(0);
+    };
     window.addEventListener("reset-timeline-latest", onReset);
     return () => window.removeEventListener("reset-timeline-latest", onReset);
   }, []);
 
   const activeEvent = events[currentIndex] ?? events[0];
   const activeYear = activeEvent.year;
+
+  // Reset orientation guess whenever the shown poster changes.
+  useEffect(() => {
+    setPortrait(false);
+  }, [activeEvent.id]);
   const activeYearIndex = Math.max(0, allYears.indexOf(activeYear));
 
   const eventHref =
@@ -305,8 +332,11 @@ export default function EventTimeline({
                   }}
                 />
 
-                <div
-                  className="absolute font-bebas tracking-wide transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                <button
+                  type="button"
+                  onClick={() => goToYear(year)}
+                  title={`Go to ${year}`}
+                  className="pointer-events-auto absolute cursor-pointer whitespace-nowrap text-left font-bebas tracking-wide transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
                   style={{
                     left: `${dotX}px`,
                     top: `${dotY}px`,
@@ -343,20 +373,21 @@ export default function EventTimeline({
                       {year}
                     </span>
                   )}
-                </div>
+                </button>
               </div>
             );
           })}
         </div>
 
         <div className="relative min-h-[340px] w-full flex-1 pl-4 sm:pl-8 lg:pl-10">
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait" custom={direction}>
             <motion.article
               key={activeEvent.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
+              custom={direction}
+              initial={{ opacity: 0, y: direction > 0 ? 56 : -56 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: direction > 0 ? -56 : 56 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
               className="flex flex-col-reverse gap-8 lg:flex-row lg:items-center lg:justify-between"
             >
               {/* Event Information */}
@@ -389,15 +420,19 @@ export default function EventTimeline({
                 className="group relative flex-none cursor-pointer overflow-hidden rounded-2xl bg-[#E6E1F2] shadow-sm transition-transform duration-300 hover:scale-[1.02]"
                 style={{
                   width: "100%",
-                  maxWidth: 420,
-                  aspectRatio: "175 / 105",
+                  maxWidth: portrait ? 320 : 420,
+                  aspectRatio: portrait ? "3 / 4" : "175 / 105",
                 }}
               >
                 <img
                   src={activeEvent.image}
                   alt={activeEvent.title}
                   loading="lazy"
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  onLoad={(e) => {
+                    const img = e.currentTarget;
+                    setPortrait(img.naturalHeight > img.naturalWidth);
+                  }}
+                  className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
                 />
               </Link>
             </motion.article>

@@ -70,6 +70,8 @@ export interface EventDoc {
   slug: string;
   title: string;
   description: string;
+  shortDescription?: string;
+  showOnEvents?: boolean;
   date?: string;
   venue?: string;
   category?: string;

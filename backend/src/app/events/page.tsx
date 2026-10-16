@@ -9,6 +9,8 @@ type ApiEvent = {
   slug: string;
   title: string;
   description: string;
+  shortDescription?: string;
+  showOnEvents?: boolean;
   date?: string;
   startsAt?: string;
   venue?: string;
@@ -41,7 +43,7 @@ function toEventItem(e: ApiEvent): EventItem {
     title: (e.title || "").toUpperCase(),
     date: formatDate(iso),
     location: e.venue || e.location || "TBD",
-    description: e.description || "",
+    description: e.shortDescription?.trim() || e.description || "",
     image: e.theme?.poster || e.images?.[0]?.url || "",
     slug: e.slug || e.id,
   };
@@ -56,7 +58,9 @@ export default function EventsPage() {
       .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
       .then((data: { events: ApiEvent[] }) => {
         if (!active) return;
-        const items = (data.events ?? []).map(toEventItem);
+        const items = (data.events ?? [])
+          .filter((e) => e.showOnEvents !== false)
+          .map(toEventItem);
         setEvents(items);
       })
       .catch(() => {

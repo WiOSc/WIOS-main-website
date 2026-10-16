@@ -62,6 +62,12 @@ export default function FormBuilder({ initial }: { initial?: EventDoc }) {
   const editing = !!initial;
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
+  const [shortDescription, setShortDescription] = useState(
+    initial?.shortDescription ?? "",
+  );
+  const [showOnEvents, setShowOnEvents] = useState(
+    initial?.showOnEvents ?? true,
+  );
   const [status, setStatus] = useState<string>(initial?.status ?? "draft");
   const [accent, setAccent] = useState(initial?.theme?.accent ?? "#8D7FB5");
   const [poster, setPoster] = useState(initial?.theme?.poster ?? "");
@@ -130,6 +136,8 @@ export default function FormBuilder({ initial }: { initial?: EventDoc }) {
       const body = {
         title,
         description,
+        shortDescription,
+        showOnEvents,
         status,
         allowEdit,
         location: location || undefined,
@@ -186,6 +194,12 @@ export default function FormBuilder({ initial }: { initial?: EventDoc }) {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
+        <textarea
+          className={`${input} min-h-16`}
+          placeholder="Short description (shown on the /events timeline — keep it brief)"
+          value={shortDescription}
+          onChange={(e) => setShortDescription(e.target.value)}
+        />
         <input
           className={input}
           placeholder="Location"
@@ -229,6 +243,14 @@ export default function FormBuilder({ initial }: { initial?: EventDoc }) {
             onChange={(e) => setAllowEdit(e.target.checked)}
           />
           Let users edit their registration while open
+        </label>
+        <label className="flex items-center gap-2 font-poppins text-sm">
+          <input
+            type="checkbox"
+            checked={showOnEvents}
+            onChange={(e) => setShowOnEvents(e.target.checked)}
+          />
+          Show this event on the public /events timeline
         </label>
         <div className="grid grid-cols-2 gap-3">
           <select
