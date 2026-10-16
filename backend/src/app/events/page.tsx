@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Navbar from "@/components/landing/Navbar";
 import EventTimeline, { type EventItem } from "@/components/events/EventTimeline";
+import EventsLoader from "@/components/events/EventsLoader";
 
 type ApiEvent = {
   id: string;
@@ -92,9 +93,7 @@ export default function EventsPage() {
 
         <div className="relative z-10 flex w-full flex-col lg:min-h-0 lg:flex-1 lg:flex-row lg:items-center lg:justify-center">
           {events === null ? (
-            <p className="text-center font-poppins text-sm text-black/40">
-              Loading events…
-            </p>
+            <EventsLoader />
           ) : events.length === 0 ? (
             <p className="text-center font-poppins text-sm text-black/40">
               No events to show yet.
