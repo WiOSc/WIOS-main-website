@@ -167,8 +167,11 @@ export default function EventTimeline({
   const currentIndexRef = useRef(currentIndex);
   currentIndexRef.current = currentIndex;
 
-  // Track poster orientation so vertical posters are shown in full (not cropped).
-  const [portrait, setPortrait] = useState(false);
+  // Poster orientation keyed by image url (true = portrait). Derived from the
+  // preloaded Image objects below, so it's reliable even for cached images.
+  const [orientationMap, setOrientationMap] = useState<Record<string, boolean>>(
+    {},
+  );
 
   // Scroll direction drives the enter/exit slide (1 = down, -1 = up).
   const [direction, setDirection] = useState(1);
@@ -193,16 +196,27 @@ export default function EventTimeline({
   }, [events]);
 
   // Preload every poster once so dial steps / revisits are instant (warms the
-  // browser cache). Refs are kept so the Image objects aren't garbage-collected
-  // before the request finishes.
+  // browser cache), and record each poster's orientation as it resolves. Refs
+  // are kept so the Image objects aren't garbage-collected mid-request.
   const preloadedRef = useRef<HTMLImageElement[]>([]);
   useEffect(() => {
+    const record = (src: string, img: HTMLImageElement) => {
+      if (!img.naturalWidth) return;
+      const isPortrait = img.naturalHeight > img.naturalWidth;
+      setOrientationMap((prev) =>
+        prev[src] === isPortrait ? prev : { ...prev, [src]: isPortrait },
+      );
+    };
+
     preloadedRef.current = events
       .map((e) => e.image)
       .filter(Boolean)
       .map((src) => {
         const img = new window.Image();
+        img.onload = () => record(src, img);
         img.src = src;
+        // Cached images may already be complete before onload is wired up.
+        if (img.complete) record(src, img);
         return img;
       });
   }, [events]);
@@ -297,10 +311,8 @@ export default function EventTimeline({
   const activeEvent = events[currentIndex] ?? events[0];
   const activeYear = activeEvent.year;
 
-  // Reset orientation guess whenever the shown poster changes.
-  useEffect(() => {
-    setPortrait(false);
-  }, [activeEvent.id]);
+  // Orientation of the currently shown poster (from the preloaded map).
+  const portrait = orientationMap[activeEvent.image] ?? false;
   const activeYearIndex = Math.max(0, allYears.indexOf(activeYear));
 
   const eventHref =
@@ -526,8 +538,15 @@ export default function EventTimeline({
                   alt={activeEvent.title}
                   loading="lazy"
                   onLoad={(e) => {
+                    // Fallback in case this poster wasn't in the preload map.
                     const img = e.currentTarget;
-                    setPortrait(img.naturalHeight > img.naturalWidth);
+                    if (!img.naturalWidth) return;
+                    const isPortrait = img.naturalHeight > img.naturalWidth;
+                    setOrientationMap((prev) =>
+                      prev[activeEvent.image] === isPortrait
+                        ? prev
+                        : { ...prev, [activeEvent.image]: isPortrait },
+                    );
                   }}
                   className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
                 />

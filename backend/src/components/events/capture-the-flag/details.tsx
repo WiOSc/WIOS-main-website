@@ -8,19 +8,11 @@ import { C, Shell, GhostTitle, fmtDateTime } from "./theme";
 
 export default function CaptureTheGhostDetails({ event }: { event: EventDoc }) {
   const open = isRegistrationOpen(event);
-  const poster = event.theme?.poster ?? event.bannerUrl;
   const fmt = fmtDateTime;
 
   return (
     <Shell center={false}>
       <div className="flex w-full max-w-2xl flex-col gap-6">
-        {poster && (
-          <div
-            className="h-56 w-full border bg-cover bg-center"
-            style={{ borderColor: C.line, backgroundImage: `url(${poster})` }}
-          />
-        )}
-
         <GhostTitle title={event.title} />
 
         {(event.startsAt || event.location) && (
