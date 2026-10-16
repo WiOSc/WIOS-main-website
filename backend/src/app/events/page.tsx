@@ -79,9 +79,9 @@ export default function EventsPage() {
   return (
     <>
       <Navbar />
-      <main className="relative flex h-[100svh] flex-col overflow-hidden overscroll-none bg-[#FBFBFE] pt-20 pb-4 sm:pt-24">
+      <main className="relative flex min-h-[100svh] flex-col overscroll-none bg-[#FBFBFE] pt-20 pb-4 sm:pt-24 lg:h-[100svh] lg:overflow-hidden">
         <div className="relative z-10 flex flex-none flex-col items-center justify-center px-6 text-center">
-          <h1 className="font-bebas text-6xl leading-none tracking-wider text-black sm:text-7xl md:text-8xl">
+          <h1 className="font-bebas text-5xl leading-none tracking-wider text-black sm:text-7xl md:text-8xl">
             EVENTS
           </h1>
 
@@ -90,7 +90,7 @@ export default function EventsPage() {
           </p>
         </div>
 
-        <div className="relative z-10 flex min-h-0 flex-1 items-center justify-center">
+        <div className="relative z-10 flex w-full flex-col lg:min-h-0 lg:flex-1 lg:flex-row lg:items-center lg:justify-center">
           {events === null ? (
             <p className="text-center font-poppins text-sm text-black/40">
               Loading events…

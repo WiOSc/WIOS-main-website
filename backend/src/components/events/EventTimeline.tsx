@@ -181,6 +181,17 @@ export default function EventTimeline({
     [events]
   );
 
+  // Events grouped by year, in order — used by the mobile scroll list.
+  const yearGroups = useMemo(() => {
+    const map = new Map<string, EventItem[]>();
+    for (const e of events) {
+      const bucket = map.get(e.year);
+      if (bucket) bucket.push(e);
+      else map.set(e.year, [e]);
+    }
+    return Array.from(map, ([year, items]) => ({ year, items }));
+  }, [events]);
+
   // Jump straight to the first event of a given year (clicking a year on the dial).
   const goToYear = useCallback(
     (year: string) => {
@@ -212,6 +223,8 @@ export default function EventTimeline({
 
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {
+      // The dial (and its scroll-hijacking) is desktop-only; let mobile scroll normally.
+      if (window.innerWidth < 1024) return;
       if (Math.abs(e.deltaY) < 16) return;
 
       const current = currentIndexRef.current;
@@ -246,6 +259,7 @@ export default function EventTimeline({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (window.innerWidth < 1024) return;
       if (e.key === "ArrowDown" || e.key === "ArrowRight") {
         step(1);
       } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
@@ -280,16 +294,80 @@ export default function EventTimeline({
       : "/events";
 
   return (
-    <section
-      aria-label="Event Timeline"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      className="relative mx-auto flex h-full max-h-[620px] w-full max-w-6xl select-none items-center justify-between px-6 py-2 sm:px-10"
-    >
-      <div className="relative flex w-full flex-col items-center gap-6 lg:flex-row lg:items-center lg:gap-16">
+    <>
+      {/* Mobile: simple vertical scroll list grouped by year. */}
+      <div className="flex w-full flex-col gap-10 px-5 pb-16 lg:hidden">
+        {yearGroups.map(({ year, items }) => (
+          <section key={year} className="flex flex-col gap-5">
+            <h2 className="font-bebas text-4xl leading-none tracking-wide text-black">
+              {year}
+            </h2>
+            {items.map((ev) => {
+              const href =
+                ev.slug && ev.slug !== "events"
+                  ? `/events/${ev.slug}`
+                  : "/events";
+              return (
+                <Link
+                  key={ev.id}
+                  href={href}
+                  title={`View ${ev.title}`}
+                  className="flex flex-col gap-3"
+                >
+                  <div className="flex items-center justify-center overflow-hidden rounded-2xl bg-[#E6E1F2]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={ev.image}
+                      alt={ev.title}
+                      loading="lazy"
+                      className="max-h-[70vh] w-full object-contain"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <h3 className="font-bebas text-2xl leading-tight tracking-wide text-black">
+                      {ev.title}
+                    </h3>
+                    <div className="flex flex-wrap items-center gap-2 font-playpen text-xs text-black">
+                      <span className="flex items-center gap-1.5">
+                        <CalendarIcon />
+                        {ev.date}
+                      </span>
+                      {ev.location && (
+                        <>
+                          <span className="text-black/30" aria-hidden="true">
+                            |
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <PinIcon />
+                            {ev.location}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    {ev.description && (
+                      <p className="font-poppins text-xs leading-relaxed text-black/70">
+                        {ev.description}
+                      </p>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
+          </section>
+        ))}
+      </div>
+
+      {/* Desktop: radial-dial timeline (unchanged). */}
+      <section
+        aria-label="Event Timeline"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        className="relative mx-auto hidden h-full max-h-[620px] w-full max-w-6xl select-none items-center justify-between px-6 py-2 sm:px-10 lg:flex"
+      >
+      <div className="relative flex w-full flex-col items-center gap-4 lg:flex-row lg:items-center lg:gap-16">
         <div
           aria-hidden="true"
-          className="pointer-events-none relative flex h-[340px] w-full max-w-[280px] flex-none items-center justify-center overflow-visible sm:h-[420px] lg:h-[520px] lg:w-[320px]"
+          className="pointer-events-none relative hidden h-[340px] w-full max-w-[280px] flex-none items-center justify-center overflow-visible sm:h-[420px] lg:flex lg:h-[520px] lg:w-[320px]"
         >
           <svg
             className="absolute inset-0 h-full w-full overflow-visible"
@@ -379,7 +457,7 @@ export default function EventTimeline({
           })}
         </div>
 
-        <div className="relative w-full flex-1 pl-4 sm:pl-8 lg:pl-10">
+        <div className="relative w-full flex-1 pl-0 sm:pl-8 lg:pl-10">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.article
               key={activeEvent.id}
@@ -388,7 +466,7 @@ export default function EventTimeline({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: direction > 0 ? -56 : 56 }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-col-reverse gap-8 lg:flex-row lg:items-center lg:justify-between"
+              className="flex flex-col-reverse gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-8"
             >
               {/* Event Information */}
               <div className="flex flex-1 flex-col gap-4">
@@ -421,7 +499,7 @@ export default function EventTimeline({
               <Link
                 href={eventHref}
                 title={`View ${activeEvent.title}`}
-                className="group relative flex-none cursor-pointer overflow-hidden rounded-2xl bg-[#E6E1F2] shadow-sm transition-transform duration-300 hover:scale-[1.02]"
+                className="group relative mx-auto flex-none cursor-pointer overflow-hidden rounded-2xl bg-[#E6E1F2] shadow-sm transition-transform duration-300 hover:scale-[1.02] max-lg:max-h-[42vh] lg:mx-0"
                 style={{
                   width: "100%",
                   maxWidth: portrait ? 320 : 420,
@@ -443,6 +521,7 @@ export default function EventTimeline({
           </AnimatePresence>
         </div>
       </div>
-    </section>
+      </section>
+    </>
   );
 }
