@@ -42,7 +42,7 @@ function toEventItem(e: ApiEvent): EventItem {
     year: isUpcoming ? "LATEST EVENT" : valid ? String(d.getFullYear()) : "—",
     title: (e.title || "").toUpperCase(),
     date: formatDate(iso),
-    location: e.venue || e.location || "TBD",
+    location: e.venue || e.location || "",
     description: e.shortDescription?.trim() || e.description || "",
     image: e.theme?.poster || e.images?.[0]?.url || "",
     slug: e.slug || e.id,
@@ -79,9 +79,9 @@ export default function EventsPage() {
   return (
     <>
       <Navbar />
-      <main className="relative min-h-screen overflow-hidden bg-[#FBFBFE] pt-28 pb-16">
-        <div className="relative z-10 flex flex-col items-center justify-center px-6 text-center">
-          <h1 className="mt-3 font-bebas text-7xl leading-none tracking-wider text-black sm:text-8xl md:text-9xl">
+      <main className="relative flex h-[100svh] flex-col overflow-hidden overscroll-none bg-[#FBFBFE] pt-20 pb-4 sm:pt-24">
+        <div className="relative z-10 flex flex-none flex-col items-center justify-center px-6 text-center">
+          <h1 className="font-bebas text-6xl leading-none tracking-wider text-black sm:text-7xl md:text-8xl">
             EVENTS
           </h1>
 
@@ -90,13 +90,13 @@ export default function EventsPage() {
           </p>
         </div>
 
-        <div className="relative z-10 mt-8 sm:mt-12 lg:mt-14">
+        <div className="relative z-10 flex min-h-0 flex-1 items-center justify-center">
           {events === null ? (
-            <p className="py-20 text-center font-poppins text-sm text-black/40">
+            <p className="text-center font-poppins text-sm text-black/40">
               Loading events…
             </p>
           ) : events.length === 0 ? (
-            <p className="py-20 text-center font-poppins text-sm text-black/40">
+            <p className="text-center font-poppins text-sm text-black/40">
               No events to show yet.
             </p>
           ) : (

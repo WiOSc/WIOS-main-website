@@ -284,12 +284,12 @@ export default function EventTimeline({
       aria-label="Event Timeline"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
-      className="relative mx-auto my-4 flex min-h-[500px] w-full max-w-6xl select-none items-center justify-between px-6 py-6 sm:px-10 lg:min-h-[560px]"
+      className="relative mx-auto flex h-full max-h-[620px] w-full max-w-6xl select-none items-center justify-between px-6 py-2 sm:px-10"
     >
-      <div className="relative flex w-full flex-col items-center gap-10 lg:flex-row lg:items-center lg:gap-16">
+      <div className="relative flex w-full flex-col items-center gap-6 lg:flex-row lg:items-center lg:gap-16">
         <div
           aria-hidden="true"
-          className="pointer-events-none relative flex h-[380px] w-full max-w-[280px] flex-none items-center justify-center overflow-visible sm:h-[440px] lg:h-[520px] lg:w-[320px]"
+          className="pointer-events-none relative flex h-[340px] w-full max-w-[280px] flex-none items-center justify-center overflow-visible sm:h-[420px] lg:h-[520px] lg:w-[320px]"
         >
           <svg
             className="absolute inset-0 h-full w-full overflow-visible"
@@ -379,7 +379,7 @@ export default function EventTimeline({
           })}
         </div>
 
-        <div className="relative min-h-[340px] w-full flex-1 pl-4 sm:pl-8 lg:pl-10">
+        <div className="relative w-full flex-1 pl-4 sm:pl-8 lg:pl-10">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.article
               key={activeEvent.id}
@@ -405,11 +405,15 @@ export default function EventTimeline({
                     <CalendarIcon />
                     {activeEvent.date}
                   </span>
-                  <span className="text-black/30" aria-hidden="true">|</span>
-                  <span className="flex items-center gap-1.5">
-                    <PinIcon />
-                    {activeEvent.location}
-                  </span>
+                  {activeEvent.location && (
+                    <>
+                      <span className="text-black/30" aria-hidden="true">|</span>
+                      <span className="flex items-center gap-1.5">
+                        <PinIcon />
+                        {activeEvent.location}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
 
