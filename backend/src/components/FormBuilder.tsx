@@ -14,6 +14,7 @@ import {
 import type { EventImage } from "@/modules/events";
 import { currentIdToken } from "@/lib/firebase-client";
 import PhotoUploader from "@/components/PhotoUploader";
+import PosterUploader from "@/components/PosterUploader";
 
 function newField(): FormField {
   return {
@@ -125,7 +126,7 @@ export default function FormBuilder({ initial }: { initial?: EventDoc }) {
     try {
       const token = await currentIdToken();
       if (!token) throw new Error("sign in as admin first");
-      const primaryPoster = images[0]?.url || (poster ? poster : undefined);
+      const primaryPoster = poster || images[0]?.url || undefined;
       const body = {
         title,
         description,
@@ -255,11 +256,13 @@ export default function FormBuilder({ initial }: { initial?: EventDoc }) {
               onChange={(e) => setAccent(e.target.value)}
             />
           </label>
-          <input
-            className={input}
-            placeholder="Poster link"
-            value={poster}
-            onChange={(e) => setPoster(e.target.value)}
+        </div>
+
+        <div className="rounded-xl border border-black/10 bg-black/[0.01] p-4">
+          <PosterUploader
+            posterUrl={poster}
+            onChange={setPoster}
+            disabled={saving}
           />
         </div>
       </div>
