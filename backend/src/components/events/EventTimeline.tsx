@@ -192,6 +192,21 @@ export default function EventTimeline({
     return Array.from(map, ([year, items]) => ({ year, items }));
   }, [events]);
 
+  // Preload every poster once so dial steps / revisits are instant (warms the
+  // browser cache). Refs are kept so the Image objects aren't garbage-collected
+  // before the request finishes.
+  const preloadedRef = useRef<HTMLImageElement[]>([]);
+  useEffect(() => {
+    preloadedRef.current = events
+      .map((e) => e.image)
+      .filter(Boolean)
+      .map((src) => {
+        const img = new window.Image();
+        img.src = src;
+        return img;
+      });
+  }, [events]);
+
   // Jump straight to the first event of a given year (clicking a year on the dial).
   const goToYear = useCallback(
     (year: string) => {
