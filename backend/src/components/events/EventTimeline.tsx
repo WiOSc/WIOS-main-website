@@ -179,6 +179,9 @@ export default function EventTimeline({
   const touchStartY = useRef<number | null>(null);
   const cooldownRef = useRef(false);
 
+  // Mobile-only year filter (the desktop dial always shows every year).
+  const [selectedYear, setSelectedYear] = useState<string>("ALL");
+
   const allYears = useMemo(
     () => Array.from(new Set(events.map((e) => e.year))),
     [events]
@@ -194,6 +197,15 @@ export default function EventTimeline({
     }
     return Array.from(map, ([year, items]) => ({ year, items }));
   }, [events]);
+
+  // Mobile list honours the selected year filter.
+  const visibleYearGroups = useMemo(
+    () =>
+      selectedYear === "ALL"
+        ? yearGroups
+        : yearGroups.filter((g) => g.year === selectedYear),
+    [yearGroups, selectedYear]
+  );
 
   // Preload every poster once so dial steps / revisits are instant (warms the
   // browser cache), and record each poster's orientation as it resolves. Refs
@@ -323,8 +335,29 @@ export default function EventTimeline({
   return (
     <>
       {/* Mobile: simple vertical scroll list grouped by year. */}
-      <div className="flex w-full flex-col gap-10 px-5 pb-16 lg:hidden">
-        {yearGroups.map(({ year, items }) => (
+      <div className="flex w-full flex-col gap-6 px-5 pb-16 lg:hidden">
+        {/* Year filter (mobile only) */}
+        <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {["ALL", ...allYears].map((year) => {
+            const active = selectedYear === year;
+            return (
+              <button
+                key={year}
+                type="button"
+                onClick={() => setSelectedYear(year)}
+                className={`flex-none rounded-full px-4 py-1.5 font-bebas text-sm tracking-wide transition-colors ${
+                  active
+                    ? "bg-[#8D7FB5] text-white"
+                    : "bg-black/5 text-black/60"
+                }`}
+              >
+                {year === "ALL" ? "ALL" : year}
+              </button>
+            );
+          })}
+        </div>
+
+        {visibleYearGroups.map(({ year, items }) => (
           <section key={year} className="flex flex-col gap-5">
             <h2 className="font-bebas text-4xl leading-none tracking-wide text-black">
               {year}

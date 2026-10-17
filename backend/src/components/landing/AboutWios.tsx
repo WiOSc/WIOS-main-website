@@ -9,13 +9,11 @@ const CAPSULE_COLOR = "#8D7FB5";
 export default function AboutWios() {
   return (
     <section className="relative w-full overflow-hidden bg-white">
-      <div className="relative mx-auto flex min-h-[680px] max-w-[1512px] items-center py-20">
+      <div className="relative mx-auto flex min-h-[680px] max-w-[1512px] items-center py-20 max-lg:min-h-0 max-lg:flex-col max-lg:gap-10 max-lg:py-14">
         <div
-          className="pointer-events-none absolute left-0 top-1/2 [container-type:inline-size]"
+          className="pointer-events-none hidden [container-type:inline-size] lg:absolute lg:left-0 lg:top-1/2 lg:block lg:w-[clamp(390px,49vw,850px)] lg:-translate-x-[32%] lg:-translate-y-1/2"
           style={{
-            width: "clamp(390px, 49vw, 850px)",
             aspectRatio: `${STAGE_W} / ${STAGE_H}`,
-            transform: "translate(-32%, -50%)",
           }}
         >
           <div
@@ -70,17 +68,17 @@ export default function AboutWios() {
         </div>
 
         <Reveal className="relative z-10 ml-auto max-w-[680px] px-8 sm:px-16 lg:pr-[66px]">
-          <h2 className="font-bebas text-[60px] leading-[0.95] text-black">
+          <h2 className="font-bebas text-[40px] leading-[0.95] text-black sm:text-[52px] lg:text-[60px]">
             ABOUT WIOS
           </h2>
 
-          <p className="mt-4 text-[28px] leading-none text-black">
+          <p className="mt-4 text-[20px] leading-none text-black sm:text-[24px] lg:text-[28px]">
             <span className="font-playfair">Promoting </span>
             <span className="font-cedarville text-[#5369B5]">gender diversity</span>
             <span className="font-playfair"> in tech.</span>
           </p>
 
-          <p className="mt-8 max-w-[560px] font-playfair text-[30px] leading-relaxed text-black">
+          <p className="mt-8 max-w-[560px] font-playfair text-[19px] leading-relaxed text-black sm:text-[25px] lg:text-[30px]">
             WIOS (Women in Open Source) empowers students through open-source
             learning, workshops, hackathons and technical bootcamps. We foster
             an inclusive community where students can develop skills in AI, Development,

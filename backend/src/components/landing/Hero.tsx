@@ -3,6 +3,7 @@
 import { motion, type Variants } from "framer-motion";
 import HeroLogo from "./HeroLogo";
 import ExploreButton from "./ExploreButton";
+import HeroMobile from "./HeroMobile";
 
 const container: Variants = {
   hidden: {},
@@ -29,36 +30,44 @@ const globe: Variants = {
 
 export default function Hero() {
   return (
-    <section
-      className="no-select relative min-h-screen w-full overflow-hidden bg-cover bg-center"
-      style={{ backgroundImage: "url(/hero_bg.webp)" }}
-    >
-      <motion.div
-        className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col justify-center gap-12 px-10 pt-24 lg:flex-row lg:items-center lg:justify-between"
-        variants={container}
-        initial="hidden"
-        animate="visible"
+    <>
+      {/* Mobile hero (phone / tablet) */}
+      <div className="lg:hidden">
+        <HeroMobile />
+      </div>
+
+      {/* Desktop hero — unchanged */}
+      <section
+        className="no-select relative hidden min-h-screen w-full overflow-hidden bg-cover bg-center lg:block"
+        style={{ backgroundImage: "url(/hero_bg.webp)" }}
       >
-        <div className="flex flex-col gap-10">
-          <motion.h1
-            variants={item}
-            className="max-w-xl text-4xl font-extrabold uppercase leading-tight tracking-tight text-black sm:text-5xl"
-          >
-            Where Innovation
-            <br />
-            Meets Opportunity
-          </motion.h1>
+        <motion.div
+          className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col justify-center gap-12 px-10 pt-24 lg:flex-row lg:items-center lg:justify-between"
+          variants={container}
+          initial="hidden"
+          animate="visible"
+        >
+          <div className="flex flex-col gap-10">
+            <motion.h1
+              variants={item}
+              className="max-w-xl text-4xl font-extrabold uppercase leading-tight tracking-tight text-black sm:text-5xl"
+            >
+              Where Innovation
+              <br />
+              Meets Opportunity
+            </motion.h1>
 
-          <motion.div variants={item} className="flex flex-wrap gap-5">
-            <ExploreButton variant="solid">Explore WiOS</ExploreButton>
-            <ExploreButton variant="ghost">Join the Club</ExploreButton>
+            <motion.div variants={item} className="flex flex-wrap gap-5">
+              <ExploreButton variant="solid">Explore WiOS</ExploreButton>
+              <ExploreButton variant="ghost">Join the Club</ExploreButton>
+            </motion.div>
+          </div>
+
+          <motion.div variants={globe}>
+            <HeroLogo />
           </motion.div>
-        </div>
-
-        <motion.div variants={globe}>
-          <HeroLogo />
         </motion.div>
-      </motion.div>
-    </section>
+      </section>
+    </>
   );
 }
