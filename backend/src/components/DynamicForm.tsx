@@ -16,6 +16,7 @@ export default function DynamicForm({ event }: { event: EventDoc }) {
   const banner = event.theme?.poster ?? event.bannerUrl;
   const deadline = event.registrationDeadline
     ? new Date(event.registrationDeadline).toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
         day: "2-digit",
         month: "2-digit",
         year: "numeric",

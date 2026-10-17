@@ -9,6 +9,7 @@ export const display = Chakra_Petch({ weight: ["600", "700"], subsets: ["latin"]
 // DD/MM/YYYY, hh:mm (Indian format)
 export function fmtDateTime(iso: string): string {
   return new Date(iso).toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

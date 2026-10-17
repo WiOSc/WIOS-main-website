@@ -73,6 +73,7 @@ export default async function EventPage({ params }: Props) {
   const open = isRegistrationOpen(event);
   const fmt = (iso: string) =>
     new Date(iso).toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
