@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     description: DESCRIPTION,
     url: "/",
     siteName: "WiOS VIT-AP",
-    images: [{ url: "/wios-globe-logo.png", alt: "WiOS — VIT-AP" }],
+    images: [{ url: "/wios-globe-logo.png", alt: "WiOS VIT-AP" }],
   },
   twitter: {
     card: "summary_large_image",

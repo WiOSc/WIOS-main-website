@@ -29,10 +29,12 @@ const P = {
 
 type Answers = Record<string, string>;
 
-// Split into required core + optional team members for a grouped layout.
+const EMAIL_ID = "eb04e221";
+const EMAIL_DOMAIN = "@vitapstudent.ac.in";
+
 const CORE = [
   { id: "8bee7he", label: "Name", type: "text", required: true },
-  { id: "eb04e221", label: "College Email", type: "email", required: true },
+  { id: EMAIL_ID, label: "College Email", type: "email", required: true },
   { id: "db47b8f5", label: "Team Name", type: "text", required: true },
 ] as const;
 
@@ -70,6 +72,7 @@ export default function CaptureTheGhostRegister({ event }: { event: EventDoc }) 
     useRegister(event.slug);
   const [answers, setAnswers] = useState<Answers>({});
   const [showDetails, setShowDetails] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   // Event details start open on desktop (lg+), collapsed on phones.
   useEffect(() => {
@@ -100,6 +103,12 @@ export default function CaptureTheGhostRegister({ event }: { event: EventDoc }) 
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const email = (answers[EMAIL_ID] ?? "").trim().toLowerCase();
+    if (!email.endsWith(EMAIL_DOMAIN)) {
+      setEmailError(`Use your VIT-AP email (${EMAIL_DOMAIN}).`);
+      return;
+    }
+    setEmailError(null);
     await submit(answers);
   }
 
@@ -382,9 +391,9 @@ export default function CaptureTheGhostRegister({ event }: { event: EventDoc }) 
         </div>
       </div>
 
-      {error && (
+      {(emailError || error) && (
         <p className="text-sm font-bold" style={{ color: P.danger }}>
-          {error}
+          {emailError || error}
         </p>
       )}
 

@@ -15,6 +15,13 @@ function posterUrl(event: EventDoc): string | undefined {
   return event.theme?.poster ?? event.bannerUrl ?? event.images?.[0]?.url;
 }
 
+// Route the poster through Next's image optimizer so it's recompressed well
+// under WhatsApp's ~300KB og:image ceiling (it silently drops larger images).
+// Relative URL is made absolute by metadataBase. Discord etc. are unaffected.
+function ogImage(poster: string): string {
+  return `/_next/image?url=${encodeURIComponent(poster)}&w=1200&q=60`;
+}
+
 // Per-event Open Graph / Twitter metadata so links embed title + poster.
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { eventName } = await params;
@@ -30,6 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     event.description?.replace(/\s+/g, " ").trim().slice(0, 200) ||
     "An event by WiOS, VIT-AP.";
   const poster = posterUrl(event);
+  const embedImage = poster ? ogImage(poster) : undefined;
   const url = `/events/${event.slug}`;
 
   return {
@@ -41,13 +49,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description,
       url,
       siteName: "WiOS VIT-AP",
-      images: poster ? [{ url: poster, alt: title }] : undefined,
+      images: embedImage ? [{ url: embedImage, alt: title }] : undefined,
     },
     twitter: {
-      card: poster ? "summary_large_image" : "summary",
+      card: embedImage ? "summary_large_image" : "summary",
       title,
       description,
-      images: poster ? [poster] : undefined,
+      images: embedImage ? [embedImage] : undefined,
     },
   };
 }
