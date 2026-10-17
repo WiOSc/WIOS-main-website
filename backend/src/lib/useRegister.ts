@@ -32,6 +32,12 @@ export function useRegister(slug: string) {
     [],
   );
 
+  // Warm the post-submit destinations so they render instantly on redirect.
+  useEffect(() => {
+    router.prefetch(`/events/${slug}/register/success`);
+    router.prefetch(`/events/${slug}/register/already-registered`);
+  }, [router, slug]);
+
   // Load autofill + any existing registration
   useEffect(() => {
     if (!user) {

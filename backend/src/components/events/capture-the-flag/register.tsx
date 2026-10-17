@@ -36,10 +36,28 @@ const CORE = [
   { id: "db47b8f5", label: "Team Name", type: "text", required: true },
 ] as const;
 
-const MEMBERS = [
-  { id: "b27ada53", label: "Leader Reg No", type: "text", required: true },
-  { id: "f6aa53c1", label: "Member 1 Reg No", type: "text", required: false },
-  { id: "56d5b210", label: "Member 2 Reg No", type: "text", required: false },
+const TEAM_GROUPS = [
+  {
+    group: "Leader",
+    fields: [
+      { id: "a99885f1", label: "Name", type: "text", required: true },
+      { id: "b27ada53", label: "Reg No", type: "text", required: true },
+    ],
+  },
+  {
+    group: "Member 1",
+    fields: [
+      { id: "bf94f945", label: "Name", type: "text", required: false },
+      { id: "f6aa53c1", label: "Reg No", type: "text", required: false },
+    ],
+  },
+  {
+    group: "Member 2",
+    fields: [
+      { id: "241f4d1e", label: "Name", type: "text", required: false },
+      { id: "56d5b210", label: "Reg No", type: "text", required: false },
+    ],
+  },
 ] as const;
 
 // Faint tiled bat motif as the background image
@@ -52,6 +70,13 @@ export default function CaptureTheGhostRegister({ event }: { event: EventDoc }) 
     useRegister(event.slug);
   const [answers, setAnswers] = useState<Answers>({});
   const [showDetails, setShowDetails] = useState(false);
+
+  // Event details start open on desktop (lg+), collapsed on phones.
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+      setShowDetails(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (registration) setAnswers(registration.answers as Answers);
@@ -214,12 +239,15 @@ export default function CaptureTheGhostRegister({ event }: { event: EventDoc }) 
   const field = (
     f: { id: string; label: string; type: string; required?: boolean },
     n: number,
+    showNumber = true,
   ) => (
     <label key={f.id} className="flex flex-col gap-2">
-      <span className="flex items-baseline gap-2.5 text-xs font-bold uppercase tracking-wide">
-        <span style={{ color: P.violet }}>
-          {String(n).padStart(2, "0")}
-        </span>
+      <span className="flex items-baseline gap-2.5 text-sm font-bold uppercase tracking-wide">
+        {showNumber && (
+          <span style={{ color: P.violet }}>
+            {String(n).padStart(2, "0")}
+          </span>
+        )}
         <span style={{ color: P.muted }}>
           {f.label}
           {f.required && <span className="ml-1" style={{ color: P.danger }}>*</span>}
@@ -323,14 +351,34 @@ export default function CaptureTheGhostRegister({ event }: { event: EventDoc }) 
 
       <div className="flex flex-col gap-5">
         <div
-          className="flex items-center gap-3 text-[0.7rem] font-bold uppercase tracking-[0.2em]"
+          className="flex items-center gap-2.5 text-[0.7rem] font-bold uppercase tracking-[0.2em]"
           style={{ color: P.muted }}
         >
+          <span style={{ color: P.violet }}>
+            {String(CORE.length + 1).padStart(2, "0")}
+          </span>
           <span>Team members</span>
           <span className="h-px flex-1" style={{ backgroundColor: P.line }} />
         </div>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-          {MEMBERS.map((f, i) => field(f, CORE.length + i + 1))}
+
+        <div className="flex flex-col gap-5">
+          {TEAM_GROUPS.map(({ group, fields }) => (
+            <div
+              key={group}
+              className="flex flex-col gap-4 border p-4 sm:p-5"
+              style={{ borderColor: P.lineSoft, backgroundColor: P.inputBg }}
+            >
+              <span
+                className="text-xs font-bold uppercase tracking-[0.2em]"
+                style={{ color: P.violet }}
+              >
+                {group}
+              </span>
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                {fields.map((f) => field(f, 0, false))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -346,7 +394,13 @@ export default function CaptureTheGhostRegister({ event }: { event: EventDoc }) 
         className="w-full px-8 py-4 text-sm font-bold uppercase tracking-[0.15em] transition-opacity hover:opacity-90 disabled:opacity-50"
         style={{ backgroundColor: P.accent, color: P.bg }}
       >
-        {submitting ? "Submitting..." : editing ? "Update entry" : "Register"}
+        {submitting
+          ? editing
+            ? "Updating..."
+            : "Submitting..."
+          : editing
+            ? "Update entry"
+            : "Register"}
       </button>
     </form>,
   );
