@@ -66,6 +66,7 @@ export function serializeEventDoc(
     // Compatibility fields for registration pages & admin builder
     location: venue,
     startsAt: date,
+    endsAt: data.endsAt || undefined,
     registrationDeadline: data.registrationDeadline ? toIso(data.registrationDeadline) : undefined,
     allowEdit: data.allowEdit ?? false,
     status: data.status ?? "open",

@@ -26,6 +26,7 @@ export const createEventSchema = z.object({
   // Backwards compatibility / optional registration fields
   location: z.string().optional(),
   startsAt: z.string().optional(),
+  endsAt: z.string().optional(),
   registrationDeadline: z.string().optional(),
   allowEdit: z.boolean().default(false),
   status: z.enum(["draft", "open", "closed"]).default("open"),
@@ -63,6 +64,7 @@ export interface EventDoc {
   // Backwards compatibility / optional fields
   location?: string;
   startsAt?: string;
+  endsAt?: string;
   registrationDeadline?: string;
   allowEdit?: boolean;
   status?: "draft" | "open" | "closed";

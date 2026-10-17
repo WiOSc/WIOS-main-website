@@ -19,6 +19,15 @@ export function fmtDateTime(iso: string): string {
   });
 }
 
+export function fmtTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
 // Midnight violet / toxic lime / spectral purple. `gold` slot reused as violet.
 export const C = {
   bg: "#0C0A14",

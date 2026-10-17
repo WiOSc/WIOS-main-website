@@ -73,6 +73,7 @@ export default function FormBuilder({ initial }: { initial?: EventDoc }) {
   const [poster, setPoster] = useState(initial?.theme?.poster ?? "");
   const [location, setLocation] = useState(initial?.location ?? "");
   const [startsAt, setStartsAt] = useState(isoToLocal(initial?.startsAt));
+  const [endsAt, setEndsAt] = useState(isoToLocal(initial?.endsAt));
   const [deadline, setDeadline] = useState(
     isoToLocal(initial?.registrationDeadline),
   );
@@ -143,6 +144,7 @@ export default function FormBuilder({ initial }: { initial?: EventDoc }) {
         location: location || undefined,
         images,
         startsAt: localToIso(startsAt),
+        endsAt: localToIso(endsAt),
         registrationDeadline: localToIso(deadline),
         theme: {
           accent,
@@ -224,6 +226,15 @@ export default function FormBuilder({ initial }: { initial?: EventDoc }) {
               className={input}
               value={startsAt}
               onChange={(e) => setStartsAt(e.target.value)}
+            />
+          </label>
+          <label className="flex flex-col gap-1 font-poppins text-xs text-black/60">
+            Event end (optional)
+            <input
+              type="datetime-local"
+              className={input}
+              value={endsAt}
+              onChange={(e) => setEndsAt(e.target.value)}
             />
           </label>
           <label className="flex flex-col gap-1 font-poppins text-xs text-black/60">

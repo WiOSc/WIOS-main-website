@@ -81,6 +81,13 @@ export default async function EventPage({ params }: Props) {
       minute: "2-digit",
       hour12: true,
     });
+  const fmtTime = (iso: string) =>
+    new Date(iso).toLocaleTimeString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-6 px-6 py-16">
@@ -93,7 +100,12 @@ export default async function EventPage({ params }: Props) {
       <h1 className="font-bebas text-5xl leading-none text-black">{event.title}</h1>
 
       <div className="flex flex-wrap gap-4 font-poppins text-sm text-black/60">
-        {event.startsAt && <span>📅 {fmt(event.startsAt)}</span>}
+        {event.startsAt && (
+          <span>
+            📅 {fmt(event.startsAt)}
+            {event.endsAt && ` - ${fmtTime(event.endsAt)}`}
+          </span>
+        )}
         {event.location && <span>📍 {event.location}</span>}
       </div>
 

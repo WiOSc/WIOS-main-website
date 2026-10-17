@@ -79,6 +79,7 @@ export interface EventDoc {
   bannerUrl?: string;
   location?: string;
   startsAt?: string;
+  endsAt?: string;
   registrationDeadline?: string;
   allowEdit: boolean;
   status: EventStatus;

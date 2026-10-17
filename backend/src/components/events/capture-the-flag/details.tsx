@@ -4,7 +4,7 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { type EventDoc, isRegistrationOpen } from "@/lib/event-types";
-import { C, Shell, GhostTitle, fmtDateTime } from "./theme";
+import { C, Shell, GhostTitle, fmtDateTime, fmtTime } from "./theme";
 
 export default function CaptureTheGhostDetails({ event }: { event: EventDoc }) {
   const open = isRegistrationOpen(event);
@@ -33,6 +33,7 @@ export default function CaptureTheGhostDetails({ event }: { event: EventDoc }) {
                   style={{ color: C.text }}
                 >
                   {fmt(event.startsAt)}
+                  {event.endsAt && ` - ${fmtTime(event.endsAt)}`}
                 </p>
               </div>
             )}
