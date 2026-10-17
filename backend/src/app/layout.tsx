@@ -46,7 +46,14 @@ const playpenSans = Playpen_Sans({
   variable: "--font-playpen",
 });
 
+// Base URL for resolving relative Open Graph / canonical URLs.
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined) ??
+  "http://localhost:3000";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "WIOS",
   description: "WIOS event platform",
 };

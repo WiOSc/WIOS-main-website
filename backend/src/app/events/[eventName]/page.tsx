@@ -1,13 +1,56 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getEvent } from "@/lib/events";
-import { isRegistrationOpen } from "@/lib/event-types";
+import { isRegistrationOpen, type EventDoc } from "@/lib/event-types";
 import { getOverride } from "@/components/events/registry";
 import Markdown from "@/components/Markdown";
 
 export const runtime = "nodejs";
 
 type Props = { params: Promise<{ eventName: string }> };
+
+// Best available poster for link previews.
+function posterUrl(event: EventDoc): string | undefined {
+  return event.theme?.poster ?? event.bannerUrl ?? event.images?.[0]?.url;
+}
+
+// Per-event Open Graph / Twitter metadata so links embed title + poster.
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { eventName } = await params;
+  const event = await getEvent(eventName);
+
+  if (!event || event.status === "draft") {
+    return { title: "Event not found | WiOS" };
+  }
+
+  const title = event.title;
+  const description =
+    event.shortDescription?.trim() ||
+    event.description?.replace(/\s+/g, " ").trim().slice(0, 200) ||
+    "An event by WiOS, VIT-AP.";
+  const poster = posterUrl(event);
+  const url = `/events/${event.slug}`;
+
+  return {
+    title: `${title} | WiOS`,
+    description,
+    openGraph: {
+      type: "website",
+      title,
+      description,
+      url,
+      siteName: "WiOS VIT-AP",
+      images: poster ? [{ url: poster, alt: title }] : undefined,
+    },
+    twitter: {
+      card: poster ? "summary_large_image" : "summary",
+      title,
+      description,
+      images: poster ? [poster] : undefined,
+    },
+  };
+}
 
 export default async function EventPage({ params }: Props) {
   const { eventName } = await params;
