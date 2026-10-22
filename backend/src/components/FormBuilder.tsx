@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   FIELD_TYPES,
@@ -15,6 +16,7 @@ import type { EventImage } from "@/modules/events";
 import { currentIdToken } from "@/lib/firebase-client";
 import PhotoUploader from "@/components/PhotoUploader";
 import PosterUploader from "@/components/PosterUploader";
+import { btnGhost, btnPrimary, card, input, sectionTitle } from "@/components/admin-ui";
 
 function newField(): FormField {
   return {
@@ -54,9 +56,6 @@ function fieldFromLibrary(item: FieldLibraryItem): FormField {
   };
 }
 
-const input =
-  "rounded-lg border border-black/10 px-3 py-2 font-poppins text-sm outline-none focus:border-[#8D7FB5]";
-
 export default function FormBuilder({ initial }: { initial?: EventDoc }) {
   const router = useRouter();
   const editing = !!initial;
@@ -88,6 +87,15 @@ export default function FormBuilder({ initial }: { initial?: EventDoc }) {
   const [library, setLibrary] = useState<FieldLibraryItem[] | null>(null);
   const [showLibrary, setShowLibrary] = useState(false);
   const [copied, setCopied] = useState(false);
+  // Collapse field rows by default when the form is long
+  const [openIds, setOpenIds] = useState<Set<string>>(
+    () =>
+      new Set(
+        (initial?.fields ?? []).length <= 3
+          ? (initial?.fields ?? []).map((f) => f.globalId)
+          : [],
+      ),
+  );
 
   async function copyFields() {
     const text = fields.map((f) => `${f.label || "(untitled)"} - ${f.id}`).join("\n");
@@ -177,13 +185,47 @@ export default function FormBuilder({ initial }: { initial?: EventDoc }) {
     }
   }
 
-  return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 py-12">
-      <h1 className="font-bebas text-4xl text-black">
-        {editing ? `Edit ${initial!.slug}` : "Create event"}
-      </h1>
+  const labelCls = "flex flex-col gap-1 font-poppins text-xs font-semibold text-black/55";
+  const allOpen = fields.length > 0 && fields.every((f) => openIds.has(f.globalId));
 
-      <div className="flex flex-col gap-3">
+  function toggleField(id: string) {
+    setOpenIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function addField() {
+    const f = newField();
+    setFields((p) => [...p, f]);
+    setOpenIds((p) => new Set(p).add(f.globalId));
+  }
+
+  return (
+    <div className="flex w-full flex-col gap-6">
+      <div>
+        <Link
+          href="/admin/events"
+          className="font-poppins text-xs font-bold text-[#5b4b8a] hover:underline"
+        >
+          ← All events
+        </Link>
+        <h1 className="font-bebas text-5xl leading-none text-[#1f1b2e]">
+          {editing ? (
+            <>
+              Edit <span className="text-[#5b4b8a]">{initial!.slug}</span>
+            </>
+          ) : (
+            "Create event"
+          )}
+        </h1>
+      </div>
+
+      {/* Basics */}
+      <section className={`${card} flex flex-col gap-3 p-5`}>
+        <h2 className={sectionTitle}>Basics</h2>
         <input
           className={input}
           placeholder="Event title"
@@ -208,9 +250,12 @@ export default function FormBuilder({ initial }: { initial?: EventDoc }) {
           value={location}
           onChange={(e) => setLocation(e.target.value)}
         />
+      </section>
 
-        {/* Event Images (UploadThing) */}
-        <div className="rounded-xl border border-black/10 bg-black/[0.01] p-4">
+      {/* Media */}
+      <section className={`${card} flex flex-col gap-4 p-5`}>
+        <h2 className={sectionTitle}>Images & poster</h2>
+        <div className="rounded-xl border border-dashed border-[#8D7FB5]/30 bg-[#fbf9ff] p-4">
           <PhotoUploader
             images={images}
             onChange={setImages}
@@ -218,8 +263,20 @@ export default function FormBuilder({ initial }: { initial?: EventDoc }) {
             disabled={saving}
           />
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <label className="flex flex-col gap-1 font-poppins text-xs text-black/60">
+        <div className="rounded-xl border border-dashed border-[#8D7FB5]/30 bg-[#fbf9ff] p-4">
+          <PosterUploader
+            posterUrl={poster}
+            onChange={setPoster}
+            disabled={saving}
+          />
+        </div>
+      </section>
+
+      {/* Schedule */}
+      <section className={`${card} flex flex-col gap-3 p-5`}>
+        <h2 className={sectionTitle}>Schedule</h2>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <label className={labelCls}>
             Event date & time
             <input
               type="datetime-local"
@@ -228,7 +285,7 @@ export default function FormBuilder({ initial }: { initial?: EventDoc }) {
               onChange={(e) => setStartsAt(e.target.value)}
             />
           </label>
-          <label className="flex flex-col gap-1 font-poppins text-xs text-black/60">
+          <label className={labelCls}>
             Event end (optional)
             <input
               type="datetime-local"
@@ -237,7 +294,7 @@ export default function FormBuilder({ initial }: { initial?: EventDoc }) {
               onChange={(e) => setEndsAt(e.target.value)}
             />
           </label>
-          <label className="flex flex-col gap-1 font-poppins text-xs text-black/60">
+          <label className={labelCls}>
             Registration closes
             <input
               type="datetime-local"
@@ -247,175 +304,244 @@ export default function FormBuilder({ initial }: { initial?: EventDoc }) {
             />
           </label>
         </div>
-        <label className="flex items-center gap-2 font-poppins text-sm">
-          <input
-            type="checkbox"
-            checked={allowEdit}
-            onChange={(e) => setAllowEdit(e.target.checked)}
-          />
-          Let users edit their registration while open
-        </label>
-        <label className="flex items-center gap-2 font-poppins text-sm">
-          <input
-            type="checkbox"
-            checked={showOnEvents}
-            onChange={(e) => setShowOnEvents(e.target.checked)}
-          />
-          Show this event on the public /events timeline
-        </label>
-        <div className="grid grid-cols-2 gap-3">
-          <select
-            className={input}
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
-            <option value="draft">Draft</option>
-            <option value="open">Open</option>
-            <option value="closed">Closed</option>
-          </select>
-          <select
-            className={input}
-            value={layout}
-            onChange={(e) => setLayout(e.target.value)}
-          >
-            <option value="centered">Centered layout</option>
-            <option value="split">Split layout</option>
-          </select>
-          <label className="flex items-center gap-2 font-poppins text-sm">
-            Accent
+      </section>
+
+      {/* Settings */}
+      <section className={`${card} flex flex-col gap-4 p-5`}>
+        <h2 className={sectionTitle}>Settings</h2>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <label className={labelCls}>
+            Status
+            <select
+              className={input}
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+            >
+              <option value="draft">Draft</option>
+              <option value="open">Open</option>
+              <option value="closed">Closed</option>
+            </select>
+          </label>
+          <label className={labelCls}>
+            Layout
+            <select
+              className={input}
+              value={layout}
+              onChange={(e) => setLayout(e.target.value)}
+            >
+              <option value="centered">Centered layout</option>
+              <option value="split">Split layout</option>
+            </select>
+          </label>
+          <label className={labelCls}>
+            Accent colour
             <input
               type="color"
+              className="h-[38px] w-full cursor-pointer rounded-xl border border-[#8D7FB5]/20 bg-white p-1"
               value={accent}
               onChange={(e) => setAccent(e.target.value)}
             />
           </label>
         </div>
-
-        <div className="rounded-xl border border-black/10 bg-black/[0.01] p-4">
-          <PosterUploader
-            posterUrl={poster}
-            onChange={setPoster}
-            disabled={saving}
-          />
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h2 className="font-poppins text-sm font-bold text-black/70">Fields</h2>
-          {fields.length > 0 && (
-            <button
-              type="button"
-              onClick={copyFields}
-              className="font-poppins text-xs font-bold text-[#8D7FB5]"
-            >
-              {copied ? "Copied!" : "Copy field ids"}
-            </button>
-          )}
-        </div>
-        {fields.map((field, i) => (
-          <div key={i} className="flex flex-col gap-2 rounded-xl border border-black/10 p-4">
-            <div className="flex gap-2">
-              <input
-                className={`${input} flex-1`}
-                placeholder="Question label"
-                value={field.label}
-                onChange={(e) => patchField(i, { label: e.target.value })}
-              />
-              <select
-                className={input}
-                value={field.type}
-                onChange={(e) => patchField(i, { type: e.target.value as FieldType })}
-              >
-                {FIELD_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {FIELD_LABELS[t]}
-                  </option>
-                ))}
-              </select>
-            </div>
-
+        <div className="flex flex-col gap-2.5 font-poppins text-sm">
+          <label className="flex items-center gap-2.5">
             <input
-              className={`${input} font-mono text-xs`}
-              placeholder="field id (used in code / export)"
-              value={field.id}
-              onChange={(e) =>
-                patchField(i, { id: e.target.value.trim().replace(/\s+/g, "_") })
-              }
+              type="checkbox"
+              className="h-4 w-4 accent-[#8D7FB5]"
+              checked={allowEdit}
+              onChange={(e) => setAllowEdit(e.target.checked)}
             />
-            <p className="font-mono text-[10px] text-black/30">
-              global: {field.globalId}
-            </p>
+            Let users edit their registration while open
+          </label>
+          <label className="flex items-center gap-2.5">
+            <input
+              type="checkbox"
+              className="h-4 w-4 accent-[#8D7FB5]"
+              checked={showOnEvents}
+              onChange={(e) => setShowOnEvents(e.target.checked)}
+            />
+            Show this event on the public /events timeline
+          </label>
+        </div>
+      </section>
 
-            {OPTION_TYPES.includes(field.type) && (
-              <input
-                className={input}
-                placeholder="Options (comma separated)"
-                value={field.options?.join(", ") ?? ""}
-                onChange={(e) =>
-                  patchField(i, {
-                    options: e.target.value
-                      .split(",")
-                      .map((o) => o.trim())
-                      .filter(Boolean),
-                  })
-                }
-              />
-            )}
-
-            <div className="flex items-center gap-4 font-poppins text-xs">
-              <label className="flex items-center gap-1.5">
-                <input
-                  type="checkbox"
-                  checked={field.required}
-                  onChange={(e) => patchField(i, { required: e.target.checked })}
-                />
-                Required
-              </label>
-              <button type="button" onClick={() => move(i, -1)} className="text-black/50">
-                ↑
-              </button>
-              <button type="button" onClick={() => move(i, 1)} className="text-black/50">
-                ↓
-              </button>
+      {/* Fields */}
+      <section className={`${card} flex flex-col gap-3 p-5`}>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className={sectionTitle}>
+            Form fields{" "}
+            <span className="font-normal text-black/40">· {fields.length}</span>
+          </h2>
+          {fields.length > 0 && (
+            <div className="flex items-center gap-4 font-poppins text-xs font-bold text-[#5b4b8a]">
               <button
                 type="button"
-                onClick={() => setFields((p) => p.filter((_, idx) => idx !== i))}
-                className="ml-auto text-red-500"
+                onClick={() =>
+                  setOpenIds(allOpen ? new Set() : new Set(fields.map((f) => f.globalId)))
+                }
+                className="hover:underline"
               >
-                Remove
+                {allOpen ? "Collapse all" : "Expand all"}
+              </button>
+              <button type="button" onClick={copyFields} className="hover:underline">
+                {copied ? "Copied!" : "Copy field ids"}
               </button>
             </div>
-          </div>
-        ))}
+          )}
+        </div>
 
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setFields((p) => [...p, newField()])}
-            className="rounded-full border border-black/15 px-4 py-2 font-poppins text-sm font-bold text-black"
-          >
+        {fields.length === 0 && (
+          <p className="rounded-xl bg-[#fbf9ff] px-4 py-6 text-center font-poppins text-sm text-black/40">
+            No fields yet — add one below.
+          </p>
+        )}
+
+        {fields.map((field, i) => {
+          const isOpen = openIds.has(field.globalId);
+          return (
+            <div
+              key={i}
+              className="overflow-hidden rounded-xl border border-[#8D7FB5]/20 bg-white"
+            >
+              <div className="flex items-center gap-2 bg-[#fbf9ff] px-3 py-2">
+                <button
+                  type="button"
+                  onClick={() => toggleField(field.globalId)}
+                  className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                >
+                  <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#8D7FB5]/15 font-poppins text-[11px] font-bold text-[#4a3c73]">
+                    {i + 1}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate font-poppins text-sm font-semibold text-[#1f1b2e]">
+                    {field.label || <span className="text-black/35">Untitled question</span>}
+                  </span>
+                  <span className="hidden rounded-full bg-[#a7baef]/25 px-2 py-0.5 font-poppins text-[11px] font-semibold text-[#4a5a99] sm:inline">
+                    {FIELD_LABELS[field.type]}
+                  </span>
+                  {field.required && (
+                    <span className="font-poppins text-[11px] font-bold text-red-400">
+                      required
+                    </span>
+                  )}
+                  <span className="text-xs text-black/40">{isOpen ? "▴" : "▾"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => move(i, -1)}
+                  disabled={i === 0}
+                  title="Move up"
+                  className="rounded-md px-1.5 text-black/45 hover:bg-[#8D7FB5]/10 disabled:opacity-25"
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  onClick={() => move(i, 1)}
+                  disabled={i === fields.length - 1}
+                  title="Move down"
+                  className="rounded-md px-1.5 text-black/45 hover:bg-[#8D7FB5]/10 disabled:opacity-25"
+                >
+                  ↓
+                </button>
+              </div>
+
+              {isOpen && (
+                <div className="flex flex-col gap-2.5 border-t border-[#8D7FB5]/10 p-4">
+                  <div className="flex flex-wrap gap-2">
+                    <input
+                      className={`${input} min-w-0 flex-1`}
+                      placeholder="Question label"
+                      value={field.label}
+                      onChange={(e) => patchField(i, { label: e.target.value })}
+                    />
+                    <select
+                      className={`${input} w-auto`}
+                      value={field.type}
+                      onChange={(e) =>
+                        patchField(i, { type: e.target.value as FieldType })
+                      }
+                    >
+                      {FIELD_TYPES.map((t) => (
+                        <option key={t} value={t}>
+                          {FIELD_LABELS[t]}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <input
+                    className={`${input} font-mono text-xs`}
+                    placeholder="field id (used in code / export)"
+                    value={field.id}
+                    onChange={(e) =>
+                      patchField(i, { id: e.target.value.trim().replace(/\s+/g, "_") })
+                    }
+                  />
+                  <p className="font-mono text-[10px] text-black/30">
+                    global: {field.globalId}
+                  </p>
+
+                  {OPTION_TYPES.includes(field.type) && (
+                    <input
+                      className={input}
+                      placeholder="Options (comma separated)"
+                      value={field.options?.join(", ") ?? ""}
+                      onChange={(e) =>
+                        patchField(i, {
+                          options: e.target.value
+                            .split(",")
+                            .map((o) => o.trim())
+                            .filter(Boolean),
+                        })
+                      }
+                    />
+                  )}
+
+                  <div className="flex items-center gap-4 font-poppins text-xs">
+                    <label className="flex items-center gap-1.5">
+                      <input
+                        type="checkbox"
+                        className="accent-[#8D7FB5]"
+                        checked={field.required}
+                        onChange={(e) => patchField(i, { required: e.target.checked })}
+                      />
+                      Required
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setFields((p) => p.filter((_, idx) => idx !== i))}
+                      className="ml-auto rounded-full px-2 py-1 font-bold text-red-500 hover:bg-red-50"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        <div className="flex flex-wrap gap-2 pt-1">
+          <button type="button" onClick={addField} className={btnGhost}>
             + Add field
           </button>
           <button
             type="button"
             onClick={openLibrary}
-            className="rounded-full border border-black/15 px-4 py-2 font-poppins text-sm font-bold text-[#8D7FB5]"
+            className={`${btnGhost} text-[#5b4b8a]`}
           >
             Reuse earlier field
           </button>
         </div>
 
         {showLibrary && (
-          <div className="flex flex-col gap-2 rounded-xl border border-black/10 p-4">
+          <div className="flex flex-col gap-2 rounded-xl border border-[#8D7FB5]/20 bg-[#fbf9ff] p-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-poppins text-sm font-bold text-black/70">
-                Fields from earlier events
-              </h3>
+              <h3 className={sectionTitle}>Fields from earlier events</h3>
               <button
                 type="button"
                 onClick={() => setShowLibrary(false)}
-                className="font-poppins text-xs text-black/40"
+                className="font-poppins text-xs font-bold text-black/40 hover:text-black/70"
               >
                 Close
               </button>
@@ -426,37 +552,45 @@ export default function FormBuilder({ initial }: { initial?: EventDoc }) {
             {library?.length === 0 && (
               <p className="font-poppins text-xs text-black/40">No fields yet.</p>
             )}
-            {library?.map((item) => (
-              <button
-                key={item.globalId}
-                type="button"
-                onClick={() => reuse(item)}
-                className="flex items-center justify-between rounded-lg border border-black/10 px-3 py-2 text-left hover:bg-black/5"
-              >
-                <span className="font-poppins text-sm text-black">
-                  {item.label}
-                  <span className="ml-2 text-xs text-black/40">
-                    {FIELD_LABELS[item.type]}
+            <div className="flex max-h-64 flex-col gap-2 overflow-y-auto">
+              {library?.map((item) => (
+                <button
+                  key={item.globalId}
+                  type="button"
+                  onClick={() => reuse(item)}
+                  className="flex items-center justify-between rounded-lg border border-[#8D7FB5]/15 bg-white px-3 py-2 text-left transition hover:border-[#8D7FB5]/40 hover:bg-[#8D7FB5]/5"
+                >
+                  <span className="font-poppins text-sm text-[#1f1b2e]">
+                    {item.label}
+                    <span className="ml-2 text-xs text-black/40">
+                      {FIELD_LABELS[item.type]}
+                    </span>
                   </span>
-                </span>
-                <span className="font-poppins text-xs text-black/40">
-                  used in {item.usedIn}
-                </span>
-              </button>
-            ))}
+                  <span className="font-poppins text-xs text-black/40">
+                    used in {item.usedIn}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         )}
+      </section>
+
+      {/* Sticky save bar */}
+      <div className="sticky bottom-4 z-20 flex flex-wrap items-center gap-3 rounded-2xl border border-[#8D7FB5]/20 bg-white/90 px-4 py-3 shadow-[0_8px_30px_rgba(141,127,181,0.25)] backdrop-blur">
+        <button onClick={save} disabled={saving || !title} className={btnPrimary}>
+          {saving ? "Saving…" : editing ? "Save changes" : "Create event"}
+        </button>
+        <Link href="/admin/events" className={btnGhost}>
+          Cancel
+        </Link>
+        {error && (
+          <p className="font-poppins text-sm text-red-500">{error}</p>
+        )}
+        {!title && !error && (
+          <p className="font-poppins text-xs text-black/40">Add a title to save.</p>
+        )}
       </div>
-
-      {error && <p className="font-poppins text-sm text-red-500">{error}</p>}
-
-      <button
-        onClick={save}
-        disabled={saving || !title}
-        className="self-start rounded-full bg-[#8D7FB5] px-6 py-3 font-poppins text-sm font-bold text-white disabled:opacity-60"
-      >
-        {saving ? "Saving…" : editing ? "Save changes" : "Create event"}
-      </button>
     </div>
   );
 }

@@ -1,12 +1,12 @@
 import EventsAdminList from "@/components/EventsAdminList";
 import AdminsPanel from "@/components/AdminsPanel";
+import AdminShell from "@/components/AdminShell";
 
 export default function AdminEventsPage() {
   return (
-    <main className="min-h-screen bg-white px-6">
+    <AdminShell>
       <EventsAdminList />
-      <div className="mx-auto w-full max-w-3xl border-t border-black/10" />
       <AdminsPanel />
-    </main>
+    </AdminShell>
   );
 }

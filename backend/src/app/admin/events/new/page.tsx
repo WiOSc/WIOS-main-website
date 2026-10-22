@@ -1,9 +1,10 @@
 import FormBuilder from "@/components/FormBuilder";
+import AdminShell from "@/components/AdminShell";
 
 export default function NewEventPage() {
   return (
-    <main className="min-h-screen bg-white px-6">
+    <AdminShell width="max-w-3xl">
       <FormBuilder />
-    </main>
+    </AdminShell>
   );
 }

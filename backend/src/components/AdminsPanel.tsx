@@ -2,15 +2,19 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { currentIdToken, onAuthChange } from "@/lib/firebase-client";
-import { SkeletonRows } from "./Skeleton";
+import { Skeleton } from "./Skeleton";
+import { btnPrimary, card, hint, input } from "./admin-ui";
 
 type AdminEntry = { email: string; source: "env" | "added" };
+
+const COLLAPSED = 4;
 
 export default function AdminsPanel() {
   const [admins, setAdmins] = useState<AdminEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   const load = useCallback(async () => {
     setError(null);
@@ -70,53 +74,74 @@ export default function AdminsPanel() {
     void load();
   }
 
+  const shown = admins ? (showAll ? admins : admins.slice(0, COLLAPSED)) : [];
+
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 py-8">
-      <h2 className="font-bebas text-3xl text-black">Admins</h2>
-      <p className="font-poppins text-xs text-black/50">
-        These emails get admin access on sign-in. Env admins cannot be removed here.
-      </p>
-
-      <div className="flex gap-2">
-        <input
-          type="email"
-          placeholder="new-admin@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="flex-1 rounded-lg border border-black/10 px-3 py-2 font-poppins text-sm outline-none focus:border-[#8D7FB5]"
-        />
-        <button
-          onClick={add}
-          disabled={busy}
-          className="rounded-full bg-[#8D7FB5] px-5 py-2.5 font-poppins text-sm font-bold text-white disabled:opacity-60"
-        >
-          Add admin
-        </button>
-      </div>
-
-      {error && <p className="font-poppins text-sm text-red-500">{error}</p>}
-
-      {!admins && !error && <SkeletonRows rows={2} />}
-
-      {admins?.map((a) => (
-        <div
-          key={a.email}
-          className="flex items-center gap-3 rounded-xl border border-black/10 p-4"
-        >
-          <span className="flex-1 font-poppins text-sm text-black">{a.email}</span>
-          <span className="rounded-full bg-black/5 px-2 py-0.5 font-poppins text-xs text-black/50">
-            {a.source}
-          </span>
-          {a.source === "added" && (
-            <button
-              onClick={() => remove(a.email)}
-              className="font-poppins text-xs font-bold text-red-500"
-            >
-              Remove
-            </button>
-          )}
+    <section id="admins" className="mt-16 scroll-mt-24">
+      <div className={`${card} flex flex-col gap-5 p-6`}>
+        <div>
+          <h2 className="font-bebas text-3xl text-[#1f1b2e]">
+            Admins {admins && <span className="text-[#5b4b8a]">· {admins.length}</span>}
+          </h2>
+          <p className={hint}>
+            These emails get admin access on sign-in. Env admins cannot be removed here.
+          </p>
         </div>
-      ))}
-    </div>
+
+        <div className="flex flex-wrap gap-2">
+          <input
+            type="email"
+            placeholder="new-admin@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && void add()}
+            className={`${input} min-w-0 flex-1`}
+          />
+          <button onClick={add} disabled={busy} className={btnPrimary}>
+            {busy ? "Adding…" : "Add admin"}
+          </button>
+        </div>
+
+        {error && <p className="font-poppins text-sm text-red-500">{error}</p>}
+
+        {!admins && !error && <Skeleton className="h-12 w-full" />}
+
+        <div className="grid gap-2 sm:grid-cols-2">
+          {shown.map((a) => (
+            <div
+              key={a.email}
+              className="flex items-center gap-3 rounded-xl border border-[#8D7FB5]/15 bg-[#fbf9ff] px-3 py-2.5"
+            >
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#ece6f7] font-poppins text-xs font-bold uppercase text-[#4a3c73]">
+                {a.email.slice(0, 1)}
+              </span>
+              <span className="min-w-0 flex-1 truncate font-poppins text-sm text-[#1f1b2e]" title={a.email}>
+                {a.email}
+              </span>
+              <span className="rounded-full bg-[#8D7FB5]/10 px-2 py-0.5 font-poppins text-[11px] font-semibold text-[#6b5c99]">
+                {a.source}
+              </span>
+              {a.source === "added" && (
+                <button
+                  onClick={() => remove(a.email)}
+                  className="font-poppins text-xs font-bold text-red-500 hover:underline"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {admins && admins.length > COLLAPSED && (
+          <button
+            onClick={() => setShowAll((v) => !v)}
+            className="self-start font-poppins text-xs font-bold text-[#5b4b8a] hover:underline"
+          >
+            {showAll ? "Show less ▴" : `Show all ${admins.length} ▾`}
+          </button>
+        )}
+      </div>
+    </section>
   );
 }

@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { btnPrimary } from "./admin-ui";
 import type { EventDoc, Registration } from "@/lib/event-types";
 import { currentIdToken, onAuthChange } from "@/lib/firebase-client";
 import { SkeletonRows } from "./Skeleton";
@@ -47,20 +49,34 @@ export default function RegistrationsTable({ event }: { event: EventDoc }) {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 py-12">
-      <div className="flex items-center justify-between">
-        <h1 className="font-bebas text-4xl text-black">
-          {event.title} registrations
-        </h1>
-        <button
-          onClick={exportXlsx}
-          className="rounded-full bg-[#8D7FB5] px-5 py-2.5 font-poppins text-sm font-bold text-white"
-        >
+    <div className="flex w-full flex-col gap-5">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <Link
+            href="/admin/events"
+            className="font-poppins text-xs font-bold text-[#5b4b8a] hover:underline"
+          >
+            ← All events
+          </Link>
+          <h1 className="font-bebas text-5xl leading-none text-[#1f1b2e]">
+            {event.title} <span className="text-[#5b4b8a]">registrations</span>
+          </h1>
+          {rows && (
+            <p className="mt-1 font-poppins text-xs text-black/45">
+              {rows.length} registration{rows.length === 1 ? "" : "s"}
+            </p>
+          )}
+        </div>
+        <button onClick={exportXlsx} className={btnPrimary}>
           Export .xlsx
         </button>
       </div>
 
-      {error && <p className="font-poppins text-sm text-red-500">{error}</p>}
+      {error && (
+        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 font-poppins text-sm text-red-600">
+          {error}
+        </p>
+      )}
 
       {!rows && !error && <SkeletonRows rows={5} />}
 
