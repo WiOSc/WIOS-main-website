@@ -11,6 +11,7 @@ import SheetView from "./SheetView";
 export default function RegistrationsTable({ event }: { event: EventDoc }) {
   const [rows, setRows] = useState<Registration[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isEnvAdmin, setIsEnvAdmin] = useState(false);
 
   const load = useCallback(async () => {
     setError(null);
@@ -28,9 +29,30 @@ export default function RegistrationsTable({ event }: { event: EventDoc }) {
       return;
     }
     setRows(data.registrations);
+
+    // Delete button is only offered to ADMIN_EMAILS (env) admins
+    const me = await fetch("/api/me", { headers: { Authorization: `Bearer ${token}` } });
+    if (me.ok) setIsEnvAdmin(!!(await me.json()).isEnvAdmin);
   }, [event.slug]);
 
   useEffect(() => onAuthChange(() => void load()), [load]);
+
+  async function removeRow(index: number) {
+    const reg = rows?.[index];
+    if (!reg) return;
+    if (!confirm(`Delete the registration from ${reg.name ?? reg.email} (${reg.email})?`)) return;
+    const token = await currentIdToken();
+    if (!token) return;
+    const res = await fetch(
+      `/api/events/${event.slug}/registrations/${encodeURIComponent(reg.uid)}`,
+      { method: "DELETE", headers: { Authorization: `Bearer ${token}` } },
+    );
+    if (!res.ok) {
+      setError((await res.json().catch(() => null))?.error ?? "failed to delete");
+      return;
+    }
+    setRows((prev) => prev?.filter((r) => r.uid !== reg.uid) ?? prev);
+  }
 
   async function exportXlsx() {
     const token = await currentIdToken();
@@ -82,6 +104,7 @@ export default function RegistrationsTable({ event }: { event: EventDoc }) {
 
       {rows && (
         <SheetView
+          onDeleteRow={isEnvAdmin ? removeRow : undefined}
           columns={["Name", "Email", ...event.fields.map((f) => f.label)]}
           rows={rows.map((r) => [
             r.name ?? "-",

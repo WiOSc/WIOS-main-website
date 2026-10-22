@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { route, HttpError } from "@/lib/http";
-import { requireAdmin } from "@/lib/auth";
+import { requireAdmin, requireEnvAdmin } from "@/lib/auth";
 import { deleteRegistration, getRegistration } from "@/lib/events";
 
 export const runtime = "nodejs";
@@ -15,8 +15,9 @@ export const GET = route(async (req: Request, { params }: Ctx) => {
   return NextResponse.json({ registration });
 });
 
+// Env admins only. The hidden backup copy is kept (see lib/registration-backup.ts).
 export const DELETE = route(async (req: Request, { params }: Ctx) => {
-  await requireAdmin(req);
+  await requireEnvAdmin(req);
   const { slug, id } = await params;
   await deleteRegistration(slug, id);
   return NextResponse.json({ ok: true });

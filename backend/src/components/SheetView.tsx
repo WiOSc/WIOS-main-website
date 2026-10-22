@@ -17,9 +17,12 @@ function colLetter(i: number): string {
 export default function SheetView({
   columns,
   rows,
+  onDeleteRow,
 }: {
   columns: string[];
   rows: string[][];
+  // When set, each row gets a Delete button (outside the copyable cells)
+  onDeleteRow?: (row: number) => void;
 }) {
   const [anchor, setAnchor] = useState<Cell | null>(null);
   const [focus, setFocus] = useState<Cell | null>(null);
@@ -151,6 +154,9 @@ export default function SheetView({
                   {colLetter(c)}
                 </th>
               ))}
+              {onDeleteRow && (
+                <th className="sticky top-0 z-10 h-6 border-b border-[#d4d4d4] bg-[#f3f3f3]" />
+              )}
             </tr>
             {/* column labels */}
             <tr>
@@ -164,6 +170,11 @@ export default function SheetView({
                   {label}
                 </th>
               ))}
+              {onDeleteRow && (
+                <th className="sticky right-0 top-6 z-20 select-none border-b border-l border-[#d4d4d4] bg-[#e8e4f3] px-3 py-1 text-left text-xs font-bold text-black/50">
+                  Action
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -195,6 +206,16 @@ export default function SheetView({
                     </td>
                   );
                 })}
+                {onDeleteRow && (
+                  <td className="sticky right-0 border-b border-l border-[#e2e2e2] bg-white px-3 py-1">
+                    <button
+                      onClick={() => onDeleteRow(r)}
+                      className="rounded-md px-2 py-0.5 text-xs font-bold text-red-500 hover:bg-red-50"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
             {nRows === 0 && (
