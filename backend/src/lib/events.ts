@@ -6,6 +6,11 @@ import { slugify } from "./slugify";
 import { HttpError } from "./http";
 import type { UserProfile } from "./auth";
 import {
+  backupRegistration,
+  markBackupDeleted,
+  markEventBackupsDeleted,
+} from "./registration-backup";
+import {
   FIELD_TYPES,
   OPTION_TYPES,
   type FormField,
@@ -315,6 +320,7 @@ export async function updateEvent(
 }
 
 export async function deleteEvent(slug: string): Promise<void> {
+  await markEventBackupsDeleted(slug);
   await db.recursiveDelete(db.collection("events").doc(slug));
 }
 
@@ -333,6 +339,14 @@ export async function upsertRegistration(
       { answers, updatedAt: FieldValue.serverTimestamp() },
       { merge: true },
     );
+    await backupRegistration({
+      slug,
+      uid: user.uid,
+      email: user.email,
+      name: user.name,
+      photoURL: user.photoURL,
+      answers,
+    });
     return { created: false, updated: true };
   }
 
@@ -343,6 +357,14 @@ export async function upsertRegistration(
     photoURL: user.photoURL,
     answers,
     createdAt: FieldValue.serverTimestamp(),
+  });
+  await backupRegistration({
+    slug,
+    uid: user.uid,
+    email: user.email,
+    name: user.name,
+    photoURL: user.photoURL,
+    answers,
   });
   return { created: true, updated: false };
 }
@@ -370,6 +392,7 @@ export async function listRegistrations(slug: string): Promise<Registration[]> {
 }
 
 export async function deleteRegistration(slug: string, uid: string): Promise<void> {
+  await markBackupDeleted(slug, uid);
   await db
     .collection("events")
     .doc(slug)

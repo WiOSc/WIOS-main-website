@@ -2,6 +2,7 @@ import { Timestamp, FieldValue } from "firebase-admin/firestore";
 import { db } from "@/config/firebase";
 import { slugify } from "@/lib/slugify";
 import { HttpError } from "@/lib/http";
+import { markEventBackupsDeleted } from "@/lib/registration-backup";
 import type {
   CreateEventInput,
   EventDoc,
@@ -228,5 +229,6 @@ export async function deleteEvent(idOrSlug: string): Promise<void> {
   }
 
   const docRef = db.collection("events").doc(existing.id);
+  await markEventBackupsDeleted(existing.slug);
   await db.recursiveDelete(docRef);
 }

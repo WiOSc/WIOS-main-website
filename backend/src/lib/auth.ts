@@ -56,6 +56,21 @@ export async function ensureUser(req: Request): Promise<UserProfile> {
   return { uid, email, name, photoURL, role };
 }
 
+// Only admins listed in the ADMIN_EMAILS env var (not DB-added admins)
+export async function requireEnvAdmin(req: Request): Promise<UserProfile> {
+  const decoded = await verifyBearer(req);
+  if (!decoded.email_verified || !isAdminEmail(decoded.email)) {
+    throw new HttpError(403, "env admin access required");
+  }
+  return {
+    uid: decoded.uid,
+    email: decoded.email ?? "",
+    name: decoded.name ?? null,
+    photoURL: decoded.picture ?? null,
+    role: "admin",
+  };
+}
+
 export async function requireAdmin(req: Request): Promise<UserProfile> {
   const user = await ensureUser(req);
   if (user.role !== "admin") throw new HttpError(403, "admin access required");
