@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { EventDoc, Registration } from "@/lib/event-types";
 import { currentIdToken, onAuthChange } from "@/lib/firebase-client";
 import { SkeletonRows } from "./Skeleton";
+import SheetView from "./SheetView";
 
 export default function RegistrationsTable({ event }: { event: EventDoc }) {
   const [rows, setRows] = useState<Registration[] | null>(null);
@@ -64,44 +65,17 @@ export default function RegistrationsTable({ event }: { event: EventDoc }) {
       {!rows && !error && <SkeletonRows rows={5} />}
 
       {rows && (
-        <div className="overflow-x-auto rounded-xl border border-black/10">
-          <table className="w-full font-poppins text-sm">
-            <thead className="bg-black/5 text-left">
-              <tr>
-                <th className="px-3 py-2">Name</th>
-                <th className="px-3 py-2">Email</th>
-                {event.fields.map((f) => (
-                  <th key={f.id} className="px-3 py-2">
-                    {f.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.uid} className="border-t border-black/5">
-                  <td className="px-3 py-2">{r.name ?? "-"}</td>
-                  <td className="px-3 py-2">{r.email}</td>
-                  {event.fields.map((f) => {
-                    const v = r.answers[f.id];
-                    return (
-                      <td key={f.id} className="px-3 py-2">
-                        {Array.isArray(v) ? v.join(", ") : (v ?? "")}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-              {rows.length === 0 && (
-                <tr>
-                  <td className="px-3 py-6 text-black/40" colSpan={event.fields.length + 2}>
-                    No registrations yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <SheetView
+          columns={["Name", "Email", ...event.fields.map((f) => f.label)]}
+          rows={rows.map((r) => [
+            r.name ?? "-",
+            r.email,
+            ...event.fields.map((f) => {
+              const v = r.answers[f.id];
+              return Array.isArray(v) ? v.join(", ") : (v ?? "");
+            }),
+          ])}
+        />
       )}
     </div>
   );
