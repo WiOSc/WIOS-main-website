@@ -8,6 +8,20 @@ import { currentIdToken, onAuthChange } from "@/lib/firebase-client";
 import { SkeletonRows } from "./Skeleton";
 import SheetView from "./SheetView";
 
+function fmtRegistered(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
 export default function RegistrationsTable({ event }: { event: EventDoc }) {
   const [rows, setRows] = useState<Registration[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +42,9 @@ export default function RegistrationsTable({ event }: { event: EventDoc }) {
       setError(data.error ?? "failed to load");
       return;
     }
-    setRows(data.registrations);
+    // Newest registrations first; entries without a timestamp go last
+    const time = (r: Registration) => Date.parse(r.createdAt) || 0;
+    setRows([...(data.registrations as Registration[])].sort((a, b) => time(b) - time(a)));
 
     // Delete button is only offered to ADMIN_EMAILS (env) admins
     const me = await fetch("/api/me", { headers: { Authorization: `Bearer ${token}` } });
@@ -105,8 +121,9 @@ export default function RegistrationsTable({ event }: { event: EventDoc }) {
       {rows && (
         <SheetView
           onDeleteRow={isEnvAdmin ? removeRow : undefined}
-          columns={["Name", "Email", ...event.fields.map((f) => f.label)]}
+          columns={["Registered", "Name", "Email", ...event.fields.map((f) => f.label)]}
           rows={rows.map((r) => [
+            fmtRegistered(r.createdAt),
             r.name ?? "-",
             r.email,
             ...event.fields.map((f) => {
