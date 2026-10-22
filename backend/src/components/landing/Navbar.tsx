@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { currentIdToken, onAuthChange } from "@/lib/firebase-client";
 
 const NAV_LINKS = [
   { label: "ABOUT US", href: "#" },
@@ -12,6 +13,25 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Show the Admin shortcut only to signed-in admins (role is decided server-side)
+  useEffect(
+    () =>
+      onAuthChange(async (user) => {
+        if (!user) return setIsAdmin(false);
+        try {
+          const token = await currentIdToken();
+          const res = await fetch("/api/me", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setIsAdmin(res.ok && (await res.json()).user?.role === "admin");
+        } catch {
+          setIsAdmin(false);
+        }
+      }),
+    [],
+  );
 
   return (
     <header className="fixed inset-x-0 top-0 z-20 flex items-center justify-center px-8 py-6">
@@ -29,6 +49,14 @@ export default function Navbar() {
             <span className="absolute -bottom-1 left-1/2 h-[2px] w-0 -translate-x-1/2 bg-black transition-all duration-200 ease-[cubic-bezier(.34,1.56,.64,1)] group-hover:w-full" />
           </a>
         ))}
+        {isAdmin && (
+          <a
+            href="/admin/events"
+            className="-my-1 -mr-6 rounded-full bg-[#5b4b8a] px-5 py-2 font-poppins text-xs font-bold text-white transition hover:bg-[#4a3c73]"
+          >
+            ADMIN
+          </a>
+        )}
       </nav>
 
       {/* Mobile hamburger */}
@@ -70,6 +98,15 @@ export default function Navbar() {
                 {link.label}
               </a>
             ))}
+            {isAdmin && (
+              <a
+                href="/admin/events"
+                onClick={() => setOpen(false)}
+                className="rounded-xl bg-[#5b4b8a] px-4 py-3 text-center font-poppins text-sm font-bold text-white transition-colors hover:bg-[#4a3c73]"
+              >
+                ADMIN
+              </a>
+            )}
           </div>
         )}
       </div>
