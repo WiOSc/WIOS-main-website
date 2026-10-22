@@ -131,15 +131,6 @@ export function Shell({
         }
       `}</style>
 
-      {/* moon glow */}
-      <div
-        className="pointer-events-none absolute -right-24 -top-28 h-80 w-80 rounded-full"
-        style={{
-          backgroundColor: "#1C1636",
-          boxShadow: `0 0 180px 70px rgba(167,139,250,0.16)`,
-        }}
-      />
-
       <div
         className={`relative flex min-h-full justify-center px-4 py-14 ${
           center ? "items-center" : "items-start"

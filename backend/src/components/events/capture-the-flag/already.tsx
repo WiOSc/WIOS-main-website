@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { EventDoc } from "@/lib/event-types";
 import { C, Shell, GhostTitle } from "./theme";
+import WhatsAppCta from "./whatsapp-cta";
 
 export default function CaptureTheGhostAlready({ event }: { event: EventDoc }) {
   return (
@@ -15,6 +16,10 @@ export default function CaptureTheGhostAlready({ event }: { event: EventDoc }) {
         <p className="mt-6 text-base" style={{ color: C.muted }}>
           You&apos;ve already claimed your spot for this event.
         </p>
+
+        <div className="mt-9">
+          <WhatsAppCta compact />
+        </div>
 
         <div className="mt-7">
           <Link
